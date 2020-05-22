@@ -1,15 +1,15 @@
 import { Col, Row } from "@artsy/palette"
 import { ArtistAuctionResults_artist } from "__generated__/ArtistAuctionResults_artist.graphql"
 import { PaginationFragmentContainer as Pagination } from "Components/Pagination"
-import React, { useState } from "react"
+import React, { useContext, useState } from "react"
 import { RelayRefetchProp, createRefetchContainer, graphql } from "react-relay"
 import useDeepCompareEffect from "use-deep-compare-effect"
 import { AuctionResultItemFragmentContainer as AuctionResultItem } from "./ArtistAuctionResultItem"
 import { TableSidebar } from "./Components/TableSidebar"
 
-import { ContextModule } from "@artsy/cohesion"
+import { ContextModule, Intent } from "@artsy/cohesion"
 import { Box, Spacer } from "@artsy/palette"
-import { AnalyticsSchema } from "Artsy"
+import { AnalyticsSchema, Mediator, SystemContext } from "Artsy"
 import { LoadingArea } from "Components/LoadingArea"
 import { isEqual } from "lodash"
 import { useTracking } from "react-tracking"
@@ -25,6 +25,8 @@ import { AuctionFilters } from "./Components/AuctionFilters"
 import { AuctionResultHeaderFragmentContainer as AuctionResultHeader } from "./Components/AuctionResultHeader"
 import { AuctionResultsControls } from "./Components/AuctionResultsControls"
 import { auctionResultsFilterResetState } from "./AuctionResultsFilterContext"
+import { openAuthModal } from "Utils/openAuthModal"
+import { ModalType } from "Components/Authentication/Types"
 
 const logger = createLogger("ArtistAuctionResults.tsx")
 
@@ -64,8 +66,12 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
     auctionResultsFilterResetState
   )
 
-  const previousFilters = usePrevious(filterContext.filters)
+  // Track whether auth modal has already been shown one time by user filtering/paginating.
+  const [authShownForFiltering, toggleAuthShowForFiltering] = useState(false)
 
+  const { user, mediator } = useContext(SystemContext)
+
+  const previousFilters = usePrevious(filterContext.filters)
   // TODO: move this and artwork copy to util?
   useDeepCompareEffect(() => {
     Object.entries(filterContext.filters).forEach(
@@ -75,6 +81,19 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
 
         if (filtersHaveUpdated) {
           fetchResults()
+
+          // Show auth modal due to unknown user filtering, if we never did in the past.
+          if (!user && !authShownForFiltering) {
+            mediator &&
+              openAuthModal(mediator, {
+                mode: ModalType.signup,
+                copy: "Sign up to see full auction records — for free",
+                contextModule: ContextModule.auctionResults,
+                intent: Intent.viewAuctionResults,
+              })
+            // Remember that we have shown the auth modal due to user filtering.
+            toggleAuthShowForFiltering(true)
+          }
 
           tracking.trackEvent({
             context_page: AnalyticsSchema.PageName.ArtistAuctionResults,
@@ -89,6 +108,19 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
       }
     )
   }, [filterContext.filters])
+
+  // Show auth modal due to unknown user paginating, if we never did in the past.
+  if (!user && paginated && !authShownForFiltering) {
+    mediator &&
+      openAuthModal(mediator, {
+        mode: ModalType.signup,
+        copy: "Sign up to see full auction records — for free",
+        contextModule: ContextModule.auctionResults,
+        intent: Intent.viewAuctionResults,
+      })
+    // Remember that we have shown the auth modal due to user paginating.
+    toggleAuthShowForFiltering(true)
+  }
 
   // TODO: move this and artwork copy to util? (pass loading state setter)
   function fetchResults() {
