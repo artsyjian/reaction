@@ -54,42 +54,21 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   // Detect whether user has paginated at all.
   const [paginated, togglePaginated] = useState(false)
 
-  const loadNext = () => {
-    const { hasNextPage, endCursor } = pageInfo
+  const { pageInfo } = artist.auctionResultsConnection
+  const { hasNextPage, endCursor } = pageInfo
 
+  const loadNext = () => {
+    const nextPageNum = filterContext.filters.page + 1
     if (hasNextPage) {
-      loadAfter(endCursor)
+      loadPage(endCursor, nextPageNum)
     }
   }
 
-  const loadAfter = cursor => {
-    setIsLoading(true)
+  const loadPage = (cursor, pageNum) => {
     togglePaginated(true)
 
-    relay.refetch(
-      {
-        first: PAGE_SIZE,
-        after: cursor,
-        artistID: artist.slug,
-        before: null,
-        last: null,
-        organizations,
-        categories,
-        sizes,
-        sort,
-        createdBeforeYear,
-        createdAfterYear,
-        allowEmptyCreatedDates,
-      },
-      null,
-      error => {
-        setIsLoading(false)
-
-        if (error) {
-          logger.error(error)
-        }
-      }
-    )
+    filterContext.setFilter("page", pageNum)
+    filterContext.setFilter("pageCursor", cursor)
   }
 
   const [isLoading, setIsLoading] = useState(false)
@@ -110,6 +89,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
       ([filterKey, currentFilter]) => {
         const previousFilter = previousFilters[filterKey]
         const filtersHaveUpdated = !isEqual(currentFilter, previousFilter)
+
         if (filtersHaveUpdated) {
           fetchResults()
 
@@ -134,7 +114,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
     const relayParams = {
       first: PAGE_SIZE,
       artistID: artist.slug,
-      after: null,
+      after: filterContext.filters.pageCursor,
       before: null,
       last: null,
     }
@@ -153,7 +133,6 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
     })
   }
 
-  const { pageInfo } = artist.auctionResultsConnection
   const auctionResultsLength = artist.auctionResultsConnection.edges.length
 
   const resultList = (
@@ -211,8 +190,8 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
             <Pagination
               hasNextPage={pageInfo.hasNextPage}
               pageCursors={artist.auctionResultsConnection.pageCursors}
-              onClick={loadAfter}
-              onNext={loadNext}
+              onClick={(_cursor, page) => loadPage(_cursor, page)}
+              onNext={() => loadNext()}
               scrollTo="#jumpto-ArtistHeader"
             />
           </Box>

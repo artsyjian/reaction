@@ -5,6 +5,7 @@ export interface AuctionResultsFilters {
   categories?: string[]
   sizes?: string[]
   page?: number
+  pageCursor?: string
   sort?: string
   createdAfterYear?: number
   createdBeforeYear?: number
@@ -27,6 +28,7 @@ export const initialAuctionResultsFilterState: AuctionResultsFilters = {
   categories: [],
   sizes: [],
   page: 1,
+  pageCursor: null,
   sort: "DATE_DESC",
   allowEmptyCreatedDates: true,
 }
@@ -160,6 +162,7 @@ const AuctionResultsFilterReducer = (
 
       const filterState: AuctionResultsFilters = {
         page: 1,
+        pageCursor: null,
       }
 
       arrayFilterTypes.forEach(filter => {
@@ -172,6 +175,7 @@ const AuctionResultsFilterReducer = (
       const primitiveFilterTypes: Array<keyof AuctionResultsFilters> = [
         "sort",
         "page",
+        "pageCursor",
         "createdAfterYear",
         "createdBeforeYear",
         "allowEmptyCreatedDates",
@@ -214,6 +218,7 @@ const AuctionResultsFilterReducer = (
 
       const filterState: AuctionResultsFilters = {
         page: 1,
+        pageCursor: null,
       }
 
       const filters: Array<keyof AuctionResultsFilters> = ["sort"]
