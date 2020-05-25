@@ -54,7 +54,15 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   }
 
   const loadPage = (cursor, pageNum) => {
-    filterContext.setFilter("pageAndCursor", { page: pageNum, cursor: cursor })
+    if (pageNum === 1) {
+      // Pagination returns cursor string for page 1. Ignore it. So that we can return to initial filter state which has null for cursor.
+      filterContext.setFilter("pageAndCursor", { page: 1, cursor: null })
+    } else {
+      filterContext.setFilter("pageAndCursor", {
+        page: pageNum,
+        cursor: cursor,
+      })
+    }
   }
 
   const [isLoading, setIsLoading] = useState(false)
