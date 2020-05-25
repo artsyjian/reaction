@@ -40,20 +40,8 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   relay,
 }) => {
   const filterContext = useAuctionResultsFilterContext()
-
-  const {
-    sort,
-    organizations,
-    categories,
-    sizes,
-    createdAfterYear,
-    createdBeforeYear,
-    allowEmptyCreatedDates,
-  } = filterContext.filters
-
   // Detect whether user has paginated at all.
   const [paginated, togglePaginated] = useState(false)
-
   const { pageInfo } = artist.auctionResultsConnection
   const { hasNextPage, endCursor } = pageInfo
 
