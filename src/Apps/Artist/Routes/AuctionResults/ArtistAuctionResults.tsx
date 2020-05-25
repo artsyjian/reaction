@@ -9,7 +9,7 @@ import { TableSidebar } from "./Components/TableSidebar"
 
 import { ContextModule, Intent } from "@artsy/cohesion"
 import { Box, Spacer } from "@artsy/palette"
-import { AnalyticsSchema, Mediator, SystemContext } from "Artsy"
+import { AnalyticsSchema, SystemContext } from "Artsy"
 import { LoadingArea } from "Components/LoadingArea"
 import { isEqual } from "lodash"
 import { useTracking } from "react-tracking"
@@ -41,6 +41,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   artist,
   relay,
 }) => {
+  const { user, mediator } = useContext(SystemContext)
   const filterContext = useAuctionResultsFilterContext()
   const { pageInfo } = artist.auctionResultsConnection
   const { hasNextPage, endCursor } = pageInfo
@@ -58,6 +59,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
 
   const [isLoading, setIsLoading] = useState(false)
   const [showMobileActionSheet, toggleMobileActionSheet] = useState(false)
+  const [authShownForFiltering, toggleAuthShowForFiltering] = useState(false)
   const tracking = useTracking()
 
   // Is current filter state different from the default (reset) state?
@@ -65,11 +67,6 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
     filterContext.filters,
     auctionResultsFilterResetState
   )
-
-  // Track whether auth modal has already been shown one time by user filtering/paginating.
-  const [authShownForFiltering, toggleAuthShowForFiltering] = useState(false)
-
-  const { user, mediator } = useContext(SystemContext)
 
   const previousFilters = usePrevious(filterContext.filters)
   // TODO: move this and artwork copy to util?
@@ -82,7 +79,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
         if (filtersHaveUpdated) {
           fetchResults()
 
-          // Show auth modal due to unknown user filtering, if we never did in the past.
+          // If user is not logged-in, show auth modal, but only if it was never shown before.
           if (!user && !authShownForFiltering) {
             mediator &&
               openAuthModal(mediator, {
@@ -91,7 +88,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
                 contextModule: ContextModule.auctionResults,
                 intent: Intent.viewAuctionResults,
               })
-            // Remember that we have shown the auth modal due to user filtering.
+            // Remember to not show auth modal again for this activity.
             toggleAuthShowForFiltering(true)
           }
 
@@ -108,19 +105,6 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
       }
     )
   }, [filterContext.filters])
-
-  // Show auth modal due to unknown user paginating, if we never did in the past.
-  if (!user && paginated && !authShownForFiltering) {
-    mediator &&
-      openAuthModal(mediator, {
-        mode: ModalType.signup,
-        copy: "Sign up to see full auction records — for free",
-        contextModule: ContextModule.auctionResults,
-        intent: Intent.viewAuctionResults,
-      })
-    // Remember that we have shown the auth modal due to user paginating.
-    toggleAuthShowForFiltering(true)
-  }
 
   // TODO: move this and artwork copy to util? (pass loading state setter)
   function fetchResults() {
