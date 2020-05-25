@@ -40,8 +40,6 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   relay,
 }) => {
   const filterContext = useAuctionResultsFilterContext()
-  // Detect whether user has paginated at all.
-  const [paginated, togglePaginated] = useState(false)
   const { pageInfo } = artist.auctionResultsConnection
   const { hasNextPage, endCursor } = pageInfo
 
@@ -53,7 +51,6 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   }
 
   const loadPage = (cursor, pageNum) => {
-    togglePaginated(true)
     filterContext.setFilter("pageAndCursor", { page: pageNum, cursor: cursor })
   }
 
@@ -131,7 +128,6 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
               auctionResult={node}
               lastChild={index === auctionResultsLength - 1}
               filtersAtDefault={filtersAtDefault}
-              paginated={paginated}
             />
           </React.Fragment>
         )
