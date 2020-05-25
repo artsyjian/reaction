@@ -58,7 +58,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   const { hasNextPage, endCursor } = pageInfo
 
   const loadNext = () => {
-    const nextPageNum = filterContext.filters.page + 1
+    const nextPageNum = filterContext.filters.pageAndCursor.page + 1
     if (hasNextPage) {
       loadPage(endCursor, nextPageNum)
     }
@@ -66,9 +66,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
 
   const loadPage = (cursor, pageNum) => {
     togglePaginated(true)
-
-    filterContext.setFilter("page", pageNum)
-    filterContext.setFilter("pageCursor", cursor)
+    filterContext.setFilter("pageAndCursor", { page: pageNum, cursor: cursor })
   }
 
   const [isLoading, setIsLoading] = useState(false)
@@ -114,7 +112,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
     const relayParams = {
       first: PAGE_SIZE,
       artistID: artist.slug,
-      after: filterContext.filters.pageCursor,
+      after: filterContext.filters.pageAndCursor.cursor,
       before: null,
       last: null,
     }
