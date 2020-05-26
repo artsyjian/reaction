@@ -38,6 +38,7 @@ describe("AuctionResults", () => {
   }
 
   const trackEvent = jest.fn()
+  const mockOpenAuthModal = openAuthModal as jest.Mock
 
   beforeAll(() => {
     ;(useTracking as jest.Mock).mockImplementation(() => {
@@ -45,10 +46,8 @@ describe("AuctionResults", () => {
         trackEvent,
       }
     })
-    ;(openAuthModal as jest.Mock).mockImplementation(() => {
-      return {
-        openAuthModal,
-      }
+    mockOpenAuthModal.mockImplementation(() => {
+      return
     })
   })
 
@@ -61,7 +60,7 @@ describe("AuctionResults", () => {
       wrapper = await getWrapper()
     })
     afterEach(() => {
-      openAuthModal.mockReset()
+      mockOpenAuthModal.mockReset()
     })
 
     it("calls auth modal for 1st pagination but not for 2nd", done => {
@@ -72,7 +71,7 @@ describe("AuctionResults", () => {
         .simulate("click")
 
       setTimeout(() => {
-        expect(openAuthModal).toHaveBeenCalledTimes(1)
+        expect(mockOpenAuthModal).toHaveBeenCalledTimes(1)
       })
 
       pagination
@@ -82,7 +81,7 @@ describe("AuctionResults", () => {
 
       setTimeout(() => {
         // expect no new call
-        expect(openAuthModal).toHaveBeenCalledTimes(1)
+        expect(mockOpenAuthModal).toHaveBeenCalledTimes(1)
         done()
       })
     })
