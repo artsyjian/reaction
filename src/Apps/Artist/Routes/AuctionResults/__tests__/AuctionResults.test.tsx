@@ -8,9 +8,11 @@ import { act } from "react-dom/test-utils"
 import { graphql } from "react-relay"
 import { useTracking } from "react-tracking"
 import { Breakpoint } from "Utils/Responsive"
+import { openAuthModal } from "Utils/openAuthModal"
 
 jest.unmock("react-relay")
 jest.mock("react-tracking")
+jest.mock("Utils/openAuthModal")
 
 describe("AuctionResults", () => {
   let wrapper: ReactWrapper
@@ -36,15 +38,71 @@ describe("AuctionResults", () => {
   }
 
   const trackEvent = jest.fn()
+
   beforeAll(() => {
     ;(useTracking as jest.Mock).mockImplementation(() => {
       return {
         trackEvent,
       }
     })
+    ;(openAuthModal as jest.Mock).mockImplementation(() => {
+      return {
+        openAuthModal,
+      }
+    })
   })
+
   afterEach(() => {
     trackEvent.mockReset()
+  })
+
+  describe("trigger auth modal for filtering and pagination", () => {
+    beforeEach(async () => {
+      wrapper = await getWrapper()
+    })
+    afterEach(() => {
+      openAuthModal.mockReset()
+    })
+
+    it("calls auth modal for 1st pagination but not for 2nd", done => {
+      const pagination = wrapper.find("Pagination")
+      pagination
+        .find("button")
+        .at(1)
+        .simulate("click")
+
+      setTimeout(() => {
+        expect(openAuthModal).toHaveBeenCalledTimes(1)
+      })
+
+      pagination
+        .find("button")
+        .at(2)
+        .simulate("click")
+
+      setTimeout(() => {
+        // expect no new call
+        expect(openAuthModal).toHaveBeenCalledTimes(1)
+        done()
+      })
+    })
+
+    it("calls auth modal for 1st medium selection but not for 2nd", done => {
+      const filter = wrapper.find("MediumFilter")
+      const checkboxes = filter.find("Checkbox")
+
+      checkboxes.at(1).simulate("click")
+      setTimeout(() => {
+        expect(openAuthModal).toHaveBeenCalledTimes(1)
+      })
+
+      checkboxes.at(2).simulate("click")
+      setTimeout(() => {
+        // expect no new call
+        expect(openAuthModal).toHaveBeenCalledTimes(1)
+        done()
+      })
+    })
   })
 
   describe("general behavior", () => {
@@ -99,6 +157,7 @@ describe("AuctionResults", () => {
         organizations: [],
         sort: "DATE_DESC",
       }
+
       let refetchSpy
       beforeEach(async () => {
         wrapper = await getWrapper()
@@ -107,10 +166,10 @@ describe("AuctionResults", () => {
           "refetch"
         )
       })
+
       describe("pagination", () => {
         it("triggers relay refetch with after, and re-shows sign up to see price", done => {
           const pagination = wrapper.find("Pagination")
-
           pagination
             .find("button")
             .at(1)

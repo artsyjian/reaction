@@ -89,13 +89,12 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
 
           // If user is not logged-in, show auth modal, but only if it was never shown before.
           if (!user && !authShownForFiltering) {
-            mediator &&
-              openAuthModal(mediator, {
-                mode: ModalType.signup,
-                copy: "Sign up to see full auction records — for free",
-                contextModule: ContextModule.auctionResults,
-                intent: Intent.viewAuctionResults,
-              })
+            openAuthModal(mediator, {
+              mode: ModalType.signup,
+              copy: "Sign up to see full auction records — for free",
+              contextModule: ContextModule.auctionResults,
+              intent: Intent.viewAuctionResults,
+            })
             // Remember to not show auth modal again for this activity.
             toggleAuthShowForFiltering(true)
           }
