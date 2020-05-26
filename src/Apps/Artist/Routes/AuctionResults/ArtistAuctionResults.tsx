@@ -45,6 +45,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
   const filterContext = useAuctionResultsFilterContext()
   const { pageInfo } = artist.auctionResultsConnection
   const { hasNextPage, endCursor } = pageInfo
+  const artistName = artist.name
 
   const loadNext = () => {
     const nextPageNum = filterContext.filters.pageAndCursor.page + 1
@@ -91,7 +92,7 @@ const AuctionResultsContainer: React.FC<AuctionResultsProps> = ({
           if (!user && !authShownForFiltering) {
             openAuthModal(mediator, {
               mode: ModalType.signup,
-              copy: "Sign up to see full auction records — for free",
+              copy: `Sign up to see auction results for ${artistName}`,
               contextModule: ContextModule.auctionResults,
               intent: Intent.viewAuctionResults,
             })
@@ -238,6 +239,7 @@ export const ArtistAuctionResultsRefetchContainer = createRefetchContainer(
           allowEmptyCreatedDates: { type: "Boolean" }
         ) {
         slug
+        name
         ...AuctionResultHeader_artist
         auctionResultsConnection(
           first: $first
